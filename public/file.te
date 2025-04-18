@@ -409,3 +409,8 @@ type audiohal_data_file, file_type, data_file_type, core_data_file_type;
 # Should be:
 #   type apk_data_file, file_type, data_file_type;
 neverallow fs_type file_type:filesystem associate;
+
+# ICS blobs
+type ics_blob_file, file_type;
+type ics_audio_blob_file, file_type;
+type ics_camera_blob_file, file_type;
