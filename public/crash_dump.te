@@ -3,7 +3,7 @@ type crash_dump_exec, exec_type, file_type;
 
 # crash_dump might inherit CAP_SYS_PTRACE from a privileged process,
 # which will result in an audit log even when it's allowed to trace.
-dontaudit crash_dump self:capability { sys_ptrace };
+dontaudit crash_dump self:global_capability_class_set { sys_ptrace };
 
 userdebug_or_eng(`
   allow crash_dump logd:process { ptrace signal sigchld sigstop sigkill };
@@ -15,9 +15,11 @@ userdebug_or_eng(`
 # Use inherited file descriptors
 allow crash_dump domain:fd use;
 
-# Write to the IPC pipe inherited from crashing processes.
+# Read/write IPC pipes inherited from crashing processes.
+allow crash_dump domain:fifo_file { read write };
+
 # Append to pipes given to us by processes requesting dumps (e.g. dumpstate)
-allow crash_dump domain:fifo_file { write append };
+allow crash_dump domain:fifo_file { append };
 
 r_dir_file(crash_dump, domain)
 allow crash_dump exec_type:file r_file_perms;
@@ -45,6 +47,14 @@ allow crash_dump anr_data_file:file { append getattr };
 allow crash_dump tombstone_data_file:file { append getattr };
 
 read_logd(crash_dump)
+
+# Crash dump is not intended to access the following data types. Since these
+# are WAI, suppress the denials to clean up the logs.
+dontaudit crash_dump {
+  core_data_file_type
+  vendor_file_type
+}:dir search;
+dontaudit crash_dump system_data_file:file read;
 
 ###
 ### neverallow assertions
